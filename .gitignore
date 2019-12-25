@@ -1,0 +1,7 @@
+.vscode/
+venv/
+cookies
+*.json
+mb2016.svg
+*.Rproj
+__pycache__/
