@@ -95,7 +95,7 @@ def read_problems(filename='probs.json', remove_dups=False):
     return probs
 
 # Holds are in the form 'A18' to 'K1'; we want them as (row, col) coordinates
-def hold_to_coord(hold):
+def _hold_to_coord(hold):
     row = 18 - int(hold[1:len(hold)])
     col = ord(hold[0].upper()) - ord('A')
     return row, col
@@ -112,7 +112,7 @@ def problems_to_array(df):
     for _, problem in df.iterrows():
         for holdtype_depth, holdtype_label in enumerate(cols):
             for hold in problem[holdtype_label]:
-                r, c = hold_to_coord(hold)
+                r, c = _hold_to_coord(hold)
                 array[count, r, c, holdtype_depth] = 1
                 array[count, r, c, -1] = 0
         count = count + 1

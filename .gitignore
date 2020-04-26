@@ -5,3 +5,4 @@ cookies
 mb2016.svg
 *.Rproj
 __pycache__/
+.Rproj.user
