@@ -1,8 +1,17 @@
+# General ignores
 .vscode/
 venv/
-cookies
+__pycache__
+.ipynb*
+
+# Files that might be best not to share
+*.out
+*.csv
 *.json
 mb2016.svg
+
+# R stuff
 *.Rproj
-__pycache__/
 .Rproj.user
+.RData
+.Rhistory
