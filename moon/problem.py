@@ -1,4 +1,5 @@
 from enum import Enum, auto
+import moon.viz
 import numpy as np
 import pandas as pd
 
@@ -66,8 +67,8 @@ class Problem:
         self.sentence = self._to_sentence()
 
     def __repr__(self):
-        return f'Problem(name={self.name}, grade={self.grade}, setter={self.setter}, rating={self.rating}, repeats={self.repeats}, benchmark={self.benchmark}, master={self.master}, assessment={self.assessment}, type={self.type})'
-    
+        return f'Problem(name={self.name}, grade={self.grade}, setter={self.setter}, rating={self.rating}, repeats={self.repeats}, benchmark={self.benchmark}, master={self.master}, assessment={self.assessment}, type={self.type}, holds={self.sentence})'
+
     def _to_3darray(self):
         array = np.stack([Problem._BLANK, Problem._BLANK, Problem._BLANK], axis=-1)
         for i, holds in enumerate([self.holds_start, self.holds_intermed, self.holds_end]):
@@ -76,6 +77,6 @@ class Problem:
                 col = ord(hold[0].upper()) - ord('A')
                 array[row, col, i] = 1
         return array
-    
+
     def _to_sentence(self):
         return [Problem.BOS, *self.holds_start, Problem.SEP, *self.holds_intermed, Problem.SEP, *self.holds_end, Problem.SEP, Problem.EOS]
