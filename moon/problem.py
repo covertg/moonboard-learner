@@ -1,12 +1,22 @@
 from enum import Enum, auto
+import numpy as np
 import pandas as pd
 
+
 class Grade:
+    # Our data is 6B to 8B+, but Moonboard 2019 goes down to 5+.
+    ALL_GRADES = ['5+', '6A', '6A+', '6B', '6B+', '6C', '6C+', '7A', '7A+', '7B', '7B+', '7C', '7C+', '8A', '8A+', '8B', '8B+']
+    ONEHOTS = np.identity(len(ALL_GRADES), dtype=np.int8)
+    ORDINALS = np.tri(len(ALL_GRADES), dtype=np.int8)
+
     def __init__(self, grade, usergrade, prefer_user=True):
         self._grade = grade
         self._usergrade = usergrade
         self.grade = usergrade if prefer_user and not pd.isna(usergrade) else grade
-        # TODO one-hot, int, ordinal representations
+        # Save other possible representations based on self.grade
+        self.rank = Grade.ALL_GRADES.index(self.grade)
+        self.onehot = Grade.ONEHOTS[self.rank]
+        self.ordinal = Grade.ORDINALS[self.rank]
     
     def __repr__(self):
         return self.grade
@@ -30,6 +40,9 @@ class ProblemType(Enum):
 
 
 class Problem:
+    _BLANK = np.zeros((18, 11), dtype=np.int8)
+    BOS, EOS, SEP = '<P>', '</P>', '.'
+
     def __init__(self, data, prefer_user_grade=True):
         self.name = data.Name
         self.grade = Grade(data.Grade, data.UserGrade, prefer_user=prefer_user_grade)
@@ -47,7 +60,22 @@ class Problem:
         self.holds_start = data.Holds_Start
         self.holds_intermed = data.Holds_Intermed
         self.holds_end = data.Holds_End
-        # TODO different holds representations: binary 3d array, sequence, ...
+        # Save various representations of holds
+        self.array_3d = self._to_3darray()
+        self.array = np.sum(self.array_3d, axis=-1, dtype=np.int8)
+        self.sentence = self._to_sentence()
 
     def __repr__(self):
         return f'Problem(name={self.name}, grade={self.grade}, setter={self.setter}, rating={self.rating}, repeats={self.repeats}, benchmark={self.benchmark}, master={self.master}, assessment={self.assessment}, type={self.type})'
+    
+    def _to_3darray(self):
+        array = np.stack([Problem._BLANK, Problem._BLANK, Problem._BLANK], axis=-1)
+        for i, holds in enumerate([self.holds_start, self.holds_intermed, self.holds_end]):
+            for hold in holds:
+                row = Problem._BLANK.shape[0] - int(hold[1:len(hold)])  # Holds are on a grid from 'A18' (18=bottom A=left) to 'K1' (1=top K=right).
+                col = ord(hold[0].upper()) - ord('A')
+                array[row, col, i] = 1
+        return array
+    
+    def _to_sentence(self):
+        return [Problem.BOS, *self.holds_start, Problem.SEP, *self.holds_intermed, Problem.SEP, *self.holds_end, Problem.SEP, Problem.EOS]
