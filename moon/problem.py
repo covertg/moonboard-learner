@@ -7,8 +7,9 @@ import pandas as pd
 class Grade:
     # Our data is 6B to 8B+, but Moonboard 2019 goes down to 5+.
     ALL_GRADES = ['5+', '6A', '6A+', '6B', '6B+', '6C', '6C+', '7A', '7A+', '7B', '7B+', '7C', '7C+', '8A', '8A+', '8B', '8B+']
-    ONEHOTS = np.identity(len(ALL_GRADES), dtype=np.int8)
-    ORDINALS = np.tri(len(ALL_GRADES), dtype=np.int8)
+    N_GRADES = len(ALL_GRADES)
+    ONEHOTS = np.identity(N_GRADES, dtype=np.int8)
+    ORDINALS = np.tri(N_GRADES, dtype=np.int8)
 
     def __init__(self, grade, usergrade, prefer_user=True):
         self._grade = grade
@@ -41,7 +42,8 @@ class ProblemType(Enum):
 
 
 class Problem:
-    _BLANK = np.zeros((18, 11), dtype=np.int8)
+    GRID_SHAPE = (18, 11)
+    _BLANK = np.zeros(GRID_SHAPE, dtype=np.int8)
     BOS, EOS, SEP = '<P>', '</P>', '.'
 
     def __init__(self, data, prefer_user_grade=True):
