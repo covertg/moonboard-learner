@@ -43,7 +43,7 @@ class ProblemType(Enum):
 
 class Problem:
     GRID_SHAPE = (18, 11)
-    _BLANK = np.zeros(GRID_SHAPE, dtype=np.int8)
+    _BLANK = np.zeros(GRID_SHAPE, dtype=np.uint8)
     BOS, EOS, SEP = '<P>', '</P>', '.'
 
     def __init__(self, data, prefer_user_grade=True):
@@ -65,7 +65,7 @@ class Problem:
         self.holds_end = data.Holds_End
         # Save various representations of holds
         self.array_3d = self._to_3darray()
-        self.array = np.sum(self.array_3d, axis=-1, dtype=np.int8)
+        self.array = np.sum(self.array_3d, axis=-1, dtype=np.uint8)
         self.sentence = self._to_sentence()
 
     def __repr__(self):

@@ -2,8 +2,9 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 FILL_ALPHA = 128
-COLORS = dict(R=(255,0,0), G=(0,255,0), B=(0,0,255), P=(127,0,127))
+COLORS = dict(R=(255,0,0), G=(0,255,0), B=(0,0,255), P=(127,0,127), W=(255, 255, 255))
 _BG, _FG = None, None
+_PIXEL_SCALE = 10
 
 HOLD_TOPLEFT = (93, 87)  # x, y in pixels; not row, col
 HOLD_SPACING = 50  # px
@@ -11,16 +12,9 @@ MAX_RADIUS = 60
 MIN_RADIUS = 5
 
 
-def draw_problem(problem, rad=30, show=True):
-    fg, bg = _base_imgs()
-    draw = ImageDraw.Draw(fg)
-    arr = problem.array_3d
-    for (row, col, depth), hold in np.ndenumerate(arr):
-        if hold:
-            color = ['G', 'B', 'R'][depth]  # 0=start, 1=intermed, 2=end
-            _circle(draw, _rc_to_xy(row, col), rad, COLORS[color], fill=False)                
-    img = Image.alpha_composite(bg, fg)
-    # Show image if show=True, return image if show=False
+def draw_problem(problem, rad=30, show=True, overlaid=True, rgb=True):
+    arr = problem.array_3d if rgb else problem.array
+    img = draw_array_overlaid(arr) if overlaid else draw_array_pixels(arr)
     if show:
         if get_ipython():
             display(img)
@@ -28,6 +22,41 @@ def draw_problem(problem, rad=30, show=True):
             img.show()
     else:
         return img
+
+
+def draw_array_overlaid(arr, rad=30):
+    fg, bg = _base_imgs()
+    draw = ImageDraw.Draw(fg)
+    if arr.ndim == 2:
+        arr = arr[:, :, np.newaxis]
+        color_order = ['W']
+    else:
+        color_order = ['G', 'B', 'R']
+    for (row, col, depth), hold in np.ndenumerate(arr):
+        if hold:
+            color = color_order[depth]  # 0=start, 1=intermed, 2=end
+            _circle(draw, _rc_to_xy(row, col), rad, COLORS[color], fill=False)                
+    return Image.alpha_composite(bg, fg)
+    
+
+def draw_array_pixels(arr):
+    if arr.ndim == 3:
+        arr = arr[:, :, [0, 1, 2]]
+        arr_upsample = np.stack([_tile_array(arr[:, :, 2]),
+                                 _tile_array(arr[:, :, 0]),
+                                 _tile_array(arr[:, :, 1])], axis=-1)
+    else:
+        arr_upsample = _tile_array(arr)
+    arr_typed = np.uint8(arr_upsample * 255)
+    return Image.fromarray(arr_typed, mode='RGB' if arr.ndim==3 else 'L')
+
+
+# https://stackoverflow.com/questions/32846846/quick-way-to-upsample-numpy-array-by-nearest-neighbor-tiling
+def _tile_array(a):
+    r, c = a.shape
+    rs, cs = a.strides
+    x = np.lib.stride_tricks.as_strided(a, (r, _PIXEL_SCALE, c, _PIXEL_SCALE), (rs, 0, cs, 0))
+    return x.reshape(r * _PIXEL_SCALE, c * _PIXEL_SCALE)
 
 
 def draw_usage(problems, show=True):
