@@ -1,0 +1,42 @@
+---
+title: "notebook"
+author: "Cove"
+date: "5/22/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+x <- read.csv('mlp_coral_flattened_weighted_1e.3.csv')
+```
+
+```{r}
+folds <- max(x$Fold) + 1
+ids <- rep(1:(nrow(x)/folds), folds)
+x <- x %>%
+    mutate(param.id=ids) %>%
+    group_by(param.id)
+x
+```
+
+```{r}
+stats <- x %>%
+    summarize(rmse=mean(val_probits_rmse), rmse.sd=sd(val_probits_rmse),
+              mae=mean(val_probits_mae), mae.sd=sd(val_probits_mae),
+              CS2=mean(val_probits_CS2), CS2.sd=sd(val_probits_CS2),
+              CS1=mean(val_probits_CS1), CS1.sd=sd(val_probits_CS1),
+              acc=mean(val_probits_acc), acc.sd=sd(val_probits_acc))
+stats
+```
+
+```{r}
+plot(x=stats$param.id, y=stats$rmse)
+plot(x=stats$param.id, y=stats$mae)
+plot(x=stats$param.id, y=stats$CS1)
+plot(x=stats$param.id, y=stats$acc)
+```
+
