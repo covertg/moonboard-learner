@@ -5,7 +5,8 @@ import pandas as pd
 
 
 class Grade:
-    # Our data is 6B to 8B+, but Moonboard 2019 goes down to 5+.
+    # Although Moonboard 2016 tehcnically only allows down to 6B/6B+, some problems claim to be lower.
+    # Also, Moonboard 2019 goes down to 5+, so all are included for consistency.
     ALL_GRADES = ['5+', '6A', '6A+', '6B', '6B+', '6C', '6C+', '7A', '7A+', '7B', '7B+', '7C', '7C+', '8A', '8A+', '8B', '8B+']
     N_GRADES = len(ALL_GRADES)
     ONEHOTS = np.identity(N_GRADES, dtype=np.int8)
@@ -14,11 +15,11 @@ class Grade:
     def __init__(self, grade, usergrade, prefer_user=True):
         self._grade = grade
         self._usergrade = usergrade
-        self.grade = usergrade if prefer_user and not pd.isna(usergrade) else grade
-        # Save other possible representations based on self.grade
-        self.rank = Grade.ALL_GRADES.index(self.grade)
-        self.onehot = Grade.ONEHOTS[self.rank]
-        self.ordinal = Grade.ORDINALS[self.rank]
+        self.grade = usergrade if prefer_user and not pd.isna(usergrade) else grade  # Font grade as a string
+        self.rank = Grade.ALL_GRADES.index(self.grade)  # Ranking as an integer
+        self.categorical = Grade.ONEHOTS[self.rank]  # Classification as a one-hot
+        self.ordinal_full = Grade.ORDINALS[self.rank]  # Full representation: [1, 0, ...] is first rank, [0, 0, ...] never happens, [1, ..., 1] is last rank
+        self.ordinal_rank = self.ordinal_full[1:]  # Efficient representation: [1, 0, ...] is second rank, [0, 0, ...] is first rank, [1, ..., 1] is last rank
     
     def __repr__(self):
         return self.grade
