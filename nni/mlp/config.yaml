@@ -2,7 +2,7 @@ authorName: default
 experimentName: mlp_all
 trialConcurrency: 1
 maxExecDuration: 24h
-maxTrialNum: 400
+maxTrialNum: 500
 trainingServicePlatform: local
 searchSpacePath: search_space.json
 useAnnotation: false

@@ -1,3 +1,4 @@
+import nni
 import numpy as np
 import tensorflow as tf
 import tensorflow.keras.backend as K
@@ -126,3 +127,22 @@ def keras_metrics_to_nni(metrics_dict, default='probits_macro_mae'):
     '''
     metrics_dict['default'] = metrics_dict.pop(default)
     return metrics_dict
+
+
+class IntermediateNNI(tf.keras.callbacks.Callback):
+    ''' Keras callback to send metrics to NNI framework '''
+    def __init__(self, x_test, y_test, metric='probits_macro_mae'):
+        super(IntermediateNNI, self).__init__()
+        self.x_test = x_test
+        self.y_test = y_test
+        self.metric = metric
+
+    def on_epoch_end(self, epoch, logs={}):
+        # Calculate metric on test set
+        test_metrics = self.model.evaluate(self.x_test, self.y_test, return_dict=True, batch_size=len(self.x_test), verbose=0)
+        test_metric = test_metrics[self.metric]
+        # Get metric from validation set
+        val_metric = logs['val_' + self.metric]
+        # Return, with test set metric as default
+        combined = {'default': test_metric, 'val_' + self.metric: val_metric}
+        nni.report_intermediate_result(combined)

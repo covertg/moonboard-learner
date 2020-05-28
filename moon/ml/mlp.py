@@ -35,7 +35,7 @@ def build_keras_mlp(input_shape, hidden_dim, hidden_layers, hidden_activation, d
         raise NotImplementedError(f'Output type "{output_type}" not recognized')
     # Also different parameters for metrics depending on output type
     metrics = {'probits': [
-        util.MacroMAE(n_ranks=output_len + (1 if 'ordinal' in output_type else 0), ordi=('ordinal' in output_type)),
+        util.MacroMAE(n_ranks=output_len + (1 if ('ordinal' in output_type) else 0), ordi=('ordinal' in output_type)),
         util.mae(ordi=('ordinal' in output_type)),
         util.accuracy_k(1, ordi=('ordinal' in output_type)),
         util.accuracy_k(0, ordi=('ordinal' in output_type))
