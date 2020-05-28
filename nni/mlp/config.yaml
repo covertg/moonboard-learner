@@ -1,0 +1,18 @@
+authorName: default
+experimentName: mlp_all
+trialConcurrency: 1
+maxExecDuration: 24h
+maxTrialNum: 400
+trainingServicePlatform: local
+searchSpacePath: search_space.json
+useAnnotation: false
+multiThread: false
+tuner:
+  # builtinTunerName: Random
+  builtinTunerName: Anneal
+  classArgs:
+    optimize_mode: minimize  # for macro-MAE
+trial:
+  command: PYTHONPATH=${PYTHONPATH}:../.. python mlp_experiment.py
+  codeDir: .
+  gpuNum: 0

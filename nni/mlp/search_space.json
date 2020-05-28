@@ -1,0 +1,12 @@
+{
+    "seed":             {"_type": "choice", "_value": [21]},
+    "batch_size":       {"_type": "choice", "_value": [32, 64, 128]},
+    "max_epochs":       {"_type": "choice", "_value": [500]},
+    "flattened_input":  {"_type": "choice", "_value": [false, true]},
+    "hidden_dim":       {"_type": "choice", "_value": [16, 32, 64, 128, 256, 512]},
+    "hidden_layers":    {"_type": "choice", "_value": [1, 2, 3]},
+    "hidden_activation":{"_type": "choice", "_value": ["swish"]},
+    "dropout_p":        {"_type": "choice", "_value": [0.5, 0.1]},
+    "adam_lr":          {"_type": "choice", "_value": [0.01, 0.001, 0.0001]},
+    "output_type":      {"_type": "choice", "_value": ["categorical_smoothed", "categorical_unsmoohted", "ordinal_vanilla", "ordinal_coral_weighted", "ordinal_coral_unweighted"]}
+}
