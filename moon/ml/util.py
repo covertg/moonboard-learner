@@ -88,33 +88,41 @@ def rmse(ordi=True):
     fn.__name__ = 'rmse'
     return fn
 
-# TODO fix for categorical
+
 class MacroMAE(tf.keras.metrics.Metric):
-    def __init__(self, n_ranks, name='mae_macro', ordi=True, **kwargs):
+    def __init__(self, n_ranks, ordi=True, name='macro_mae', **kwargs):
         super(MacroMAE, self).__init__(name=name, **kwargs)
         self.n_ranks = n_ranks
+        self.ordi = ordi
         self.prob2rank = _ord_probits_to_ranks if ordi else _cat_to_ranks
         self.lab2rank = _ord_labels_to_ranks if ordi else _cat_to_ranks
-        self.mae_per_rank = [self.add_weight(name=f'mae{i+1}_sum', initializer='zeros') for i in range(n_ranks)]
-        self.counts_per_rank = [self.add_weight(name=f'counts{i+1}', initializer='zeros') for i in range(n_ranks)]
-        self.final_counts = self.add_weight(name='final_counts', shape=(n_ranks), initializer='zeros')
-        self.final_maes = self.add_weight(name='final_maes', shape=(n_ranks), initializer='zeros')
+        self.counts = self.add_weight(name='final_counts', shape=(n_ranks), initializer='zeros')
+        self.maes = self.add_weight(name='final_maes', shape=(n_ranks), initializer='zeros')
 
     def update_state(self, y_true, y_pred, sample_weight=None):
         pred_rank, true_rank = self.prob2rank(y_pred), self.lab2rank(y_true)
         dist_abs = tf.abs(pred_rank - true_rank)
+        maes, counts = [], []
         for i in range(self.n_ranks):
-            label_mask = tf.where(true_rank == i+1, 1.0, 0.0)
-            maes = dist_abs * label_mask
-            self.mae_per_rank[i].assign_add(tf.reduce_sum(maes, axis=-1))
-            self.counts_per_rank[i].assign_add(tf.reduce_sum(label_mask, axis=-1))
+            label_mask = tf.where(true_rank == (i+1 if self.ordi else i), 1.0, 0.0)
+            maes.append(tf.reduce_sum(dist_abs * label_mask, axis=-1))
+            counts.append(tf.reduce_sum(label_mask, axis=-1))
+        self.counts.assign_add(counts)
+        self.maes.assign_add(maes)
 
     def result(self):
-        self.final_counts.assign_add(self.counts_per_rank)
-        self.final_maes.assign_add(self.mae_per_rank)
-        weighted_maes = tf.math.divide_no_nan(self.final_maes, self.final_counts)
-        nonempty_maes = tf.boolean_mask(weighted_maes, tf.where(self.final_counts > 0, True, False))
+        weighted_maes = tf.math.divide_no_nan(self.maes, self.counts)
+        nonempty_maes = tf.boolean_mask(weighted_maes, tf.where(self.counts > 0, True, False))
         return tf.reduce_mean(nonempty_maes)
 
     def reset_states(self):
         K.batch_set_value([(v, np.zeros(v.shape)) for v in self.variables])
+
+
+def keras_metrics_to_nni(metrics_dict, default='probits_macro_mae'):
+    '''
+    Renames one key of a Keras history dict to "default" to specifiy the default metric for NNI.
+    Our default for all experiments is MacroMAE.
+    '''
+    metrics_dict['default'] = metrics_dict.pop(default)
+    return metrics_dict

@@ -5,9 +5,9 @@ import tensorflow as tf
 import random as random
 
 import moon.data
-import moon.learning.coral
-import moon.learning.mlp
-import moon.learning.util
+import moon.ml.coral
+import moon.ml.mlp
+import moon.ml.util
 
 def run_trial(params):
     os.environ['PYTHONHASHSEED'] = str(params['seed'])
@@ -31,7 +31,7 @@ def run_trial(params):
     y_train_for_model = y_train if params['output_type'] == 'ordinal_coral_weighted' else None
 
     # Build model
-    m = moon.learning.mlp.build_keras_mlp(
+    m = moon.ml.mlp.build_keras_mlp(
         input_shape=input_shape,
         hidden_dim=params['hidden_dim'],
         hidden_layers=params['hidden_layers'],
@@ -48,18 +48,10 @@ def run_trial(params):
     max_epochs = params['max_epochs']
     # Test model and send to NNI
     history = m.fit(x_train, y_train, batch_size=batch_size, validation_data=(x_val, y_val), epochs=max_epochs, callbacks=callbacks)
-    test_metrics = m.evaluate(x_test, y_test, return_dict=True)
-    print(_keras_metrics_to_nni(test_metrics))
-    # nni.report_final_result(_keras_metrics_to_nni(test_metrics))
-
-
-def _keras_metrics_to_nni(metrics):
-    return {
-        'default': metrics['probits_mae_macro'],
-        'acc1': metrics['probits_acc1'],
-        'mae_micro': metrics['probits_mae'],
-        'acc_exact': metrics['probits_acc']
-    }
+    test_metrics = m.evaluate(x_test, y_test, return_dict=True, batch_size=len(x_test))
+    test_metrics = moon.ml.util.keras_metrics_to_nni(test_metrics)
+    print(test_metrics)
+    # nni.report_final_result(test_metrics)
 
 
 if __name__ == '__main__':
@@ -73,7 +65,9 @@ if __name__ == '__main__':
         hidden_activation = 'swish',
         dropout_p = 0.5,
         adam_lr = 1e-3,
-        output_type = 'ordinal_vanilla',
+        # output_type = 'categorical_unsmoothed',
+        # output_type = 'categorical_smoothed',
+        output_type = 'ordinal_coral',
     )
     # params = nni.get_next_parameter()
     run_trial(params)
