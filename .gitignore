@@ -5,10 +5,10 @@ __pycache__
 .ipynb*
 
 # Files that might be best not to share
-*.out
-*.csv
-*.json
-mb2016.svg
+data/*.out
+data/*.csv
+data/*.json
+data/mb2016.svg
 
 # R stuff
 *.Rproj

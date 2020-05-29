@@ -8,5 +8,5 @@
     "hidden_activation":{"_type": "choice", "_value": ["swish"]},
     "dropout_p":        {"_type": "choice", "_value": [0.5, 0.1]},
     "adam_lr":          {"_type": "choice", "_value": [0.01, 0.001, 0.0001]},
-    "output_type":      {"_type": "choice", "_value": ["categorical_smoothed", "categorical_unsmoohted", "ordinal_vanilla", "ordinal_coral_weighted", "ordinal_coral_unweighted"]}
+    "output_type":      {"_type": "choice", "_value": ["categorical_smoothed", "categorical_unsmoothed", "ordinal_vanilla", "ordinal_coral_weighted", "ordinal_coral_unweighted"]}
 }
